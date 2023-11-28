@@ -22,26 +22,27 @@
 
 using namespace indem;
 
-int main(int argc, char **argv) {
-  auto m_pSDK = new CIMRSDK();
-  MRCONFIG config = {0};
-  config.bSlam = false;
-  config.imgResolution = IMG_640;
-  config.imgFrequency = 50;
-  config.imuFrequency = 1000;
+int main(int argc, char **argv)
+{
+    auto m_pSDK = new CIMRSDK();
+    MRCONFIG config = {0};
+    config.bSlam = false;
+    config.imgResolution = IMG_640;
+    config.imgFrequency = 50;
+    config.imuFrequency = 1000;
 
-  // m_pSDK->Init(config);
-  indem::MoudleAllParam param = m_pSDK->GetModuleParams();
-  indem::ModuleInfo info = m_pSDK->GetModuleInfo();
+    // m_pSDK->Init(config);
+    indem::MoudleAllParam param = m_pSDK->GetModuleParams();
+    indem::ModuleInfo info = m_pSDK->GetModuleInfo();
 
-  std::cout << "Module info: " << std::endl;
-  info.printInfo();
-  std::cout << "Left param: " << std::endl;
-  param._left_camera[RESOLUTION::RES_640X400].printInfo();
-  std::cout << "Right param: " << std::endl;
-  param._right_camera[RESOLUTION::RES_640X400].printInfo();
-  std::cout << "Imu param: " << std::endl;
-  param._imu.printInfo();
-  delete m_pSDK;
-  return 0;
+    std::cout << "Module info: " << std::endl;
+    info.printInfo();
+    std::cout << "Left param: " << std::endl;
+    param._left_camera[RESOLUTION::RES_640X400].printInfo();
+    std::cout << "Right param: " << std::endl;
+    param._right_camera[RESOLUTION::RES_640X400].printInfo();
+    std::cout << "Imu param: " << std::endl;
+    param._imu.printInfo();
+    delete m_pSDK;
+    return 0;
 }

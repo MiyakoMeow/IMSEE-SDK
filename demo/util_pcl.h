@@ -22,23 +22,23 @@
 
 #include <pcl/visualization/pcl_visualizer.h>
 
-class PCViewer {
-public:
-  PCViewer();
-  ~PCViewer();
+class PCViewer
+{
+  public:
+    PCViewer();
+    ~PCViewer();
 
-  void Update(const cv::Mat &xyz);
+    void Update(const cv::Mat &xyz);
 
-  void Update(pcl::PointCloud<pcl::PointXYZ>::ConstPtr pc);
+    void Update(pcl::PointCloud<pcl::PointXYZ>::ConstPtr pc);
 
-  bool WasVisual() const;
-  bool WasStopped() const;
+    bool WasVisual() const;
+    bool WasStopped() const;
 
-private:
-  void ConvertMatToPointCloud(const cv::Mat &xyz,
-                              pcl::PointCloud<pcl::PointXYZ>::Ptr pc);
+  private:
+    void ConvertMatToPointCloud(const cv::Mat &xyz, pcl::PointCloud<pcl::PointXYZ>::Ptr pc);
 
-  std::shared_ptr<pcl::visualization::PCLVisualizer> viewer_;
+    std::shared_ptr<pcl::visualization::PCLVisualizer> viewer_;
 };
 
 #endif

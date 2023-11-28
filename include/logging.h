@@ -93,14 +93,14 @@
 #define CERCES_INTERNAL_MINIGLOG_GLOG_LOGGING_H_
 
 #ifdef ANDROID
-#  include <android/log.h>
+#include <android/log.h>
 #elif WIN32
 
 #else
 #include <pthread.h>
 #include <sys/time.h>
 #include <unistd.h>
-#endif  // ANDROID
+#endif // ANDROID
 
 #include <algorithm>
 #include <ctime>
@@ -113,61 +113,63 @@
 
 // For appropriate definition of CERES_EXPORT macro.
 // Modified from ceres miniglog version [begin] -------------------------------
-//#include "ceres/internal/port.h"
-//#include "ceres/internal/disable_warnings.h"
+// #include "ceres/internal/port.h"
+// #include "ceres/internal/disable_warnings.h"
 #define CERES_EXPORT
 // Modified from ceres miniglog version [end] ---------------------------------
 
 // Log severity level constants.
-const int FATAL   = -3;
-const int ERROR   = -2;
+const int FATAL = -3;
+const int ERROR = -2;
 const int WARNING = -1;
-const int INFO    =  0;
+const int INFO = 0;
 
 // ------------------------- Glog compatibility ------------------------------
 
-namespace google {
+namespace google
+{
 
 typedef int LogSeverity;
-const int INFO    = ::INFO;
+const int INFO = ::INFO;
 const int WARNING = ::WARNING;
-const int ERROR   = ::ERROR;
-const int FATAL   = ::FATAL;
+const int ERROR = ::ERROR;
+const int FATAL = ::FATAL;
 
 // Sink class used for integration with mock and test functions. If sinks are
 // added, all log output is also sent to each sink through the send function.
 // In this implementation, WaitTillSent() is called immediately after the send.
 // This implementation is not thread safe.
-class CERES_EXPORT LogSink {
- public:
-  virtual ~LogSink() {}
-  virtual void send(LogSeverity severity,
-                    const char* full_filename,
-                    const char* base_filename,
-                    int line,
-                    const struct tm* tm_time,
-                    const char* message,
-                    size_t message_len) = 0;
-  virtual void WaitTillSent() = 0;
+class CERES_EXPORT LogSink
+{
+  public:
+    virtual ~LogSink()
+    {
+    }
+    virtual void send(LogSeverity severity, const char *full_filename, const char *base_filename, int line,
+                      const struct tm *tm_time, const char *message, size_t message_len) = 0;
+    virtual void WaitTillSent() = 0;
 };
 
 // Global set of log sinks. The actual object is defined in logging.cc.
 extern CERES_EXPORT std::set<LogSink *> log_sinks_global;
 
-inline void InitGoogleLogging(char *argv) {
-  // Do nothing; this is ignored.
+inline void InitGoogleLogging(char *argv)
+{
+    // Do nothing; this is ignored.
 }
 
 // Note: the Log sink functions are not thread safe.
-inline void AddLogSink(LogSink *sink) {
-  // TODO(settinger): Add locks for thread safety.
-  log_sinks_global.insert(sink);
+inline void AddLogSink(LogSink *sink)
+{
+    // TODO(settinger): Add locks for thread safety.
+    log_sinks_global.insert(sink);
 }
-inline void RemoveLogSink(LogSink *sink) {
-  log_sinks_global.erase(sink);
+inline void RemoveLogSink(LogSink *sink)
+{
+    log_sinks_global.erase(sink);
 }
 
-}  // namespace google
+} // namespace google
 
 // ---------------------------- Logger Class --------------------------------
 
@@ -177,170 +179,192 @@ inline void RemoveLogSink(LogSink *sink) {
 // defined, output is directed to std::cerr.  This class should not
 // be directly instantiated in code, rather it should be invoked through the
 // use of the log macros LG, LOG, or VLOG.
-class CERES_EXPORT MessageLogger {
- public:
-  MessageLogger(const char *file, int line, const char *tag, int severity)
-    : file_(file), line_(line), tag_(tag), severity_(severity) {
-    // Pre-pend the stream with the file and line number.
-    StripBasename(std::string(file), &filename_only_);
-    stream_ << filename_only_ << ":" << line << " ";
-  }
+class CERES_EXPORT MessageLogger
+{
+  public:
+    MessageLogger(const char *file, int line, const char *tag, int severity)
+        : file_(file), line_(line), tag_(tag), severity_(severity)
+    {
+        // Pre-pend the stream with the file and line number.
+        StripBasename(std::string(file), &filename_only_);
+        stream_ << filename_only_ << ":" << line << " ";
+    }
 
-  // Output the contents of the stream to the proper channel on destruction.
-  ~MessageLogger() {
-    stream_ << "\n";
+    // Output the contents of the stream to the proper channel on destruction.
+    ~MessageLogger()
+    {
+        stream_ << "\n";
 
 #ifdef ANDROID
-    static const int android_log_levels[] = {
-        ANDROID_LOG_FATAL,    // LOG(FATAL)
-        ANDROID_LOG_ERROR,    // LOG(ERROR)
-        ANDROID_LOG_WARN,     // LOG(WARNING)
-        ANDROID_LOG_INFO,     // LOG(INFO), LG, VLOG(0)
-        ANDROID_LOG_DEBUG,    // VLOG(1)
-        ANDROID_LOG_VERBOSE,  // VLOG(2) .. VLOG(N)
-    };
+        static const int android_log_levels[] = {
+            ANDROID_LOG_FATAL,   // LOG(FATAL)
+            ANDROID_LOG_ERROR,   // LOG(ERROR)
+            ANDROID_LOG_WARN,    // LOG(WARNING)
+            ANDROID_LOG_INFO,    // LOG(INFO), LG, VLOG(0)
+            ANDROID_LOG_DEBUG,   // VLOG(1)
+            ANDROID_LOG_VERBOSE, // VLOG(2) .. VLOG(N)
+        };
 
-    // Bound the logging level.
-    const int kMaxVerboseLevel = 2;
-    int android_level_index = std::min(std::max(FATAL, severity_),
-                                       kMaxVerboseLevel) - FATAL;
-    int android_log_level = android_log_levels[android_level_index];
+        // Bound the logging level.
+        const int kMaxVerboseLevel = 2;
+        int android_level_index = std::min(std::max(FATAL, severity_), kMaxVerboseLevel) - FATAL;
+        int android_log_level = android_log_levels[android_level_index];
 
-    // Output the log string the Android log at the appropriate level.
-    __android_log_write(android_log_level, tag_.c_str(), stream_.str().c_str());
+        // Output the log string the Android log at the appropriate level.
+        __android_log_write(android_log_level, tag_.c_str(), stream_.str().c_str());
 
-    // Indicate termination if needed.
-    if (severity_ == FATAL) {
-      __android_log_write(ANDROID_LOG_FATAL,
-                          tag_.c_str(),
-                          "terminating.\n");
-    }
+        // Indicate termination if needed.
+        if (severity_ == FATAL)
+        {
+            __android_log_write(ANDROID_LOG_FATAL, tag_.c_str(), "terminating.\n");
+        }
 #elif WIN32
 
 #else
-    // For Ubuntu/Mac/Windows
-    // If not building on Android, log all output to std::cerr.
-    // Get timestamp
-    timeval curTime;
-    gettimeofday(&curTime, NULL);
-    int milli = curTime.tv_usec / 1000;
-    char buffer [20];
-    strftime(buffer, 80, "%m-%d %H:%M:%S", localtime(&curTime.tv_sec));
-    char time_cstr[24] = "";
-    sprintf(time_cstr, "%s:%d ", buffer, milli);
-    // Get pid & tid
-    char tid_cstr[24] = "";
-    pid_t  pid = getpid();
-    pthread_t tid = pthread_self();
-    sprintf(tid_cstr, "%d/%u ", pid, tid);
-    if (severity_ == FATAL) {
-        // Magenta color if fatal
-        std::cerr << "\033[1;35m"<< tid_cstr << time_cstr << SeverityLabelStr() << stream_.str() << "\033[0m";
-    } else if (severity_ == ERROR) {
-        // Red color if error
-        std::cerr << "\033[1;31m"<< tid_cstr << time_cstr << SeverityLabelStr() << stream_.str() << "\033[0m";
-    } else if (severity_ == WARNING) {
-        // Yellow color if warning
-        std::cerr << "\033[1;33m"<< tid_cstr << time_cstr << SeverityLabelStr() << stream_.str() << "\033[0m";
-    } else {
-        std::cerr << tid_cstr << time_cstr << SeverityLabelStr() << stream_.str();
-    }
+        // For Ubuntu/Mac/Windows
+        // If not building on Android, log all output to std::cerr.
+        // Get timestamp
+        timeval curTime;
+        gettimeofday(&curTime, NULL);
+        int milli = curTime.tv_usec / 1000;
+        char buffer[20];
+        strftime(buffer, 80, "%m-%d %H:%M:%S", localtime(&curTime.tv_sec));
+        char time_cstr[24] = "";
+        sprintf(time_cstr, "%s:%d ", buffer, milli);
+        // Get pid & tid
+        char tid_cstr[24] = "";
+        pid_t pid = getpid();
+        pthread_t tid = pthread_self();
+        sprintf(tid_cstr, "%d/%u ", pid, tid);
+        if (severity_ == FATAL)
+        {
+            // Magenta color if fatal
+            std::cerr << "\033[1;35m" << tid_cstr << time_cstr << SeverityLabelStr() << stream_.str() << "\033[0m";
+        }
+        else if (severity_ == ERROR)
+        {
+            // Red color if error
+            std::cerr << "\033[1;31m" << tid_cstr << time_cstr << SeverityLabelStr() << stream_.str() << "\033[0m";
+        }
+        else if (severity_ == WARNING)
+        {
+            // Yellow color if warning
+            std::cerr << "\033[1;33m" << tid_cstr << time_cstr << SeverityLabelStr() << stream_.str() << "\033[0m";
+        }
+        else
+        {
+            std::cerr << tid_cstr << time_cstr << SeverityLabelStr() << stream_.str();
+        }
 #endif
 
-    LogToSinks(severity_);
-    WaitForSinks();
+        LogToSinks(severity_);
+        WaitForSinks();
 
-    // Android logging at level FATAL does not terminate execution, so abort()
-    // is still required to stop the program.
-    if (severity_ == FATAL) {
-      abort();
+        // Android logging at level FATAL does not terminate execution, so abort()
+        // is still required to stop the program.
+        if (severity_ == FATAL)
+        {
+            abort();
+        }
     }
-  }
 
-  // Return the stream associated with the logger object.
-  std::stringstream &stream() { return stream_; }
+    // Return the stream associated with the logger object.
+    std::stringstream &stream()
+    {
+        return stream_;
+    }
 
- private:
-  void LogToSinks(int severity) {
-    time_t rawtime;
-    time (&rawtime);
+  private:
+    void LogToSinks(int severity)
+    {
+        time_t rawtime;
+        time(&rawtime);
 
-    struct tm timeinfo;
+        struct tm timeinfo;
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
-    // On Windows, use secure localtime_s not localtime.
-    localtime_s(&timeinfo, &rawtime);
+        // On Windows, use secure localtime_s not localtime.
+        localtime_s(&timeinfo, &rawtime);
 #else
-    // On non-Windows systems, use threadsafe localtime_r not localtime.
-    localtime_r(&rawtime, &timeinfo);
+        // On non-Windows systems, use threadsafe localtime_r not localtime.
+        localtime_r(&rawtime, &timeinfo);
 #endif
 
-    std::set<google::LogSink*>::iterator iter;
-    // Send the log message to all sinks.
-    for (iter = google::log_sinks_global.begin();
-         iter != google::log_sinks_global.end(); ++iter) {
-      (*iter)->send(severity, file_.c_str(), filename_only_.c_str(), line_,
-                    &timeinfo, stream_.str().c_str(), stream_.str().size());
+        std::set<google::LogSink *>::iterator iter;
+        // Send the log message to all sinks.
+        for (iter = google::log_sinks_global.begin(); iter != google::log_sinks_global.end(); ++iter)
+        {
+            (*iter)->send(severity, file_.c_str(), filename_only_.c_str(), line_, &timeinfo, stream_.str().c_str(),
+                          stream_.str().size());
+        }
     }
-  }
 
-  void WaitForSinks() {
-    // TODO(settinger): Add locks for thread safety.
-    std::set<google::LogSink *>::iterator iter;
+    void WaitForSinks()
+    {
+        // TODO(settinger): Add locks for thread safety.
+        std::set<google::LogSink *>::iterator iter;
 
-    // Call WaitTillSent() for all sinks.
-    for (iter = google::log_sinks_global.begin();
-         iter != google::log_sinks_global.end(); ++iter) {
-      (*iter)->WaitTillSent();
+        // Call WaitTillSent() for all sinks.
+        for (iter = google::log_sinks_global.begin(); iter != google::log_sinks_global.end(); ++iter)
+        {
+            (*iter)->WaitTillSent();
+        }
     }
-  }
 
-  void StripBasename(const std::string &full_path, std::string *filename) {
-    // TODO(settinger): Add support for OSs with different path separators.
-    const char kSeparator = '/';
-    size_t pos = full_path.rfind(kSeparator);
-    if (pos != std::string::npos) {
-      *filename = full_path.substr(pos + 1, std::string::npos);
-    } else {
-      *filename = full_path;
+    void StripBasename(const std::string &full_path, std::string *filename)
+    {
+        // TODO(settinger): Add support for OSs with different path separators.
+        const char kSeparator = '/';
+        size_t pos = full_path.rfind(kSeparator);
+        if (pos != std::string::npos)
+        {
+            *filename = full_path.substr(pos + 1, std::string::npos);
+        }
+        else
+        {
+            *filename = full_path;
+        }
     }
-  }
 
-  char SeverityLabel() {
-    switch (severity_) {
-      case FATAL:
-        return 'F';
-      case ERROR:
-        return 'E';
-      case WARNING:
-        return 'W';
-      case INFO:
-        return 'I';
-      default:
-        return 'V';
+    char SeverityLabel()
+    {
+        switch (severity_)
+        {
+        case FATAL:
+            return 'F';
+        case ERROR:
+            return 'E';
+        case WARNING:
+            return 'W';
+        case INFO:
+            return 'I';
+        default:
+            return 'V';
+        }
     }
-  }
 
-  std::string SeverityLabelStr() {
-    switch (severity_) {
-      case FATAL:
-        return "FATAL   ";
-      case ERROR:
-        return "ERROR   ";
-      case WARNING:
-        return "WARNING ";
-      case INFO:
-        return "INFO    ";
-      default:
-        return "VERBOSE ";
+    std::string SeverityLabelStr()
+    {
+        switch (severity_)
+        {
+        case FATAL:
+            return "FATAL   ";
+        case ERROR:
+            return "ERROR   ";
+        case WARNING:
+            return "WARNING ";
+        case INFO:
+            return "INFO    ";
+        default:
+            return "VERBOSE ";
+        }
     }
-  }
 
-  std::string file_;
-  std::string filename_only_;
-  int line_;
-  std::string tag_;
-  std::stringstream stream_;
-  int severity_;
+    std::string file_;
+    std::string filename_only_;
+    int line_;
+    std::string tag_;
+    std::stringstream stream_;
+    int severity_;
 };
 
 // ---------------------- Logging Macro definitions --------------------------
@@ -348,18 +372,22 @@ class CERES_EXPORT MessageLogger {
 // This class is used to explicitly ignore values in the conditional
 // logging macros.  This avoids compiler warnings like "value computed
 // is not used" and "statement has no effect".
-class CERES_EXPORT LoggerVoidify {
- public:
-  LoggerVoidify() { }
-  // This has to be an operator with a precedence lower than << but
-  // higher than ?:
-  void operator&(const std::ostream &s) { }
+class CERES_EXPORT LoggerVoidify
+{
+  public:
+    LoggerVoidify()
+    {
+    }
+    // This has to be an operator with a precedence lower than << but
+    // higher than ?:
+    void operator&(const std::ostream &s)
+    {
+    }
 };
 
 // Log only if condition is met.  Otherwise evaluates to void.
-#define LOG_IF(severity, condition) \
-    !(condition) ? (void) 0 : LoggerVoidify() & \
-      MessageLogger((char *)__FILE__, __LINE__, "native", severity).stream()
+#define LOG_IF(severity, condition)                                                                                    \
+    !(condition) ? (void)0 : LoggerVoidify() & MessageLogger((char *)__FILE__, __LINE__, "native", severity).stream()
 
 // Log only if condition is NOT met.  Otherwise evaluates to void.
 #define LOG_IF_FALSE(severity, condition) LOG_IF(severity, !(condition))
@@ -368,61 +396,57 @@ class CERES_EXPORT LoggerVoidify {
 // google3 code is discouraged and the following shortcut exists for
 // backward compatibility with existing code.
 #ifdef MAX_LOG_LEVEL
-#  define LOG(n)  LOG_IF(n, n <= MAX_LOG_LEVEL)
-#  define VLOG(n) LOG_IF(n, n <= MAX_LOG_LEVEL)
-#  define LG      LOG_IF(INFO, INFO <= MAX_LOG_LEVEL)
-#  define VLOG_IF(n, condition) LOG_IF(n, (n <= MAX_LOG_LEVEL) && condition)
+#define LOG(n) LOG_IF(n, n <= MAX_LOG_LEVEL)
+#define VLOG(n) LOG_IF(n, n <= MAX_LOG_LEVEL)
+#define LG LOG_IF(INFO, INFO <= MAX_LOG_LEVEL)
+#define VLOG_IF(n, condition) LOG_IF(n, (n <= MAX_LOG_LEVEL) && condition)
 #else
-#  define LOG(n)  MessageLogger((char *)__FILE__, __LINE__, "native", n).stream()    // NOLINT
-#  define VLOG(n) MessageLogger((char *)__FILE__, __LINE__, "native", n).stream()    // NOLINT
-#  define LG      MessageLogger((char *)__FILE__, __LINE__, "native", INFO).stream() // NOLINT
-#  define VLOG_IF(n, condition) LOG_IF(n, condition)
+#define LOG(n) MessageLogger((char *)__FILE__, __LINE__, "native", n).stream()  // NOLINT
+#define VLOG(n) MessageLogger((char *)__FILE__, __LINE__, "native", n).stream() // NOLINT
+#define LG MessageLogger((char *)__FILE__, __LINE__, "native", INFO).stream()   // NOLINT
+#define VLOG_IF(n, condition) LOG_IF(n, condition)
 #endif
 
 // Currently, VLOG is always on for levels below MAX_LOG_LEVEL.
 #ifndef MAX_LOG_LEVEL
-#  define VLOG_IS_ON(x) (1)
+#define VLOG_IS_ON(x) (1)
 #else
-#  define VLOG_IS_ON(x) (x <= MAX_LOG_LEVEL)
+#define VLOG_IS_ON(x) (x <= MAX_LOG_LEVEL)
 #endif
 
 #ifndef NDEBUG
-#  define DLOG LOG
+#define DLOG LOG
 #else
-#  define DLOG(severity) true ? (void) 0 : LoggerVoidify() & \
-      MessageLogger((char *)__FILE__, __LINE__, "native", severity).stream()
+#define DLOG(severity)                                                                                                 \
+    true ? (void)0 : LoggerVoidify() & MessageLogger((char *)__FILE__, __LINE__, "native", severity).stream()
 #endif
 
-
 // Log a message and terminate.
-template<class T>
-void LogMessageFatal(const char *file, int line, const T &message) {
-  MessageLogger((char *)__FILE__, __LINE__, "native", FATAL).stream()
-      << message;
+template <class T> void LogMessageFatal(const char *file, int line, const T &message)
+{
+    MessageLogger((char *)__FILE__, __LINE__, "native", FATAL).stream() << message;
 }
 
 // ---------------------------- CHECK macros ---------------------------------
 
 // Check for a given boolean condition.
-#define CHECK(condition) LOG_IF_FALSE(FATAL, condition) \
-        << "Check failed: " #condition " "
+#define CHECK(condition) LOG_IF_FALSE(FATAL, condition) << "Check failed: " #condition " "
 
 #ifndef NDEBUG
 // Debug only version of CHECK
-#  define DCHECK(condition) LOG_IF_FALSE(FATAL, condition) \
-          << "Check failed: " #condition " "
+#define DCHECK(condition) LOG_IF_FALSE(FATAL, condition) << "Check failed: " #condition " "
 #else
 // Optimized version - generates no code.
-#  define DCHECK(condition) if (false) LOG_IF_FALSE(FATAL, condition) \
-          << "Check failed: " #condition " "
-#endif  // NDEBUG
+#define DCHECK(condition)                                                                                              \
+    if (false)                                                                                                         \
+    LOG_IF_FALSE(FATAL, condition) << "Check failed: " #condition " "
+#endif // NDEBUG
 
 // ------------------------- CHECK_OP macros ---------------------------------
 
 // Generic binary operator check macro. This should not be directly invoked,
 // instead use the binary comparison macros defined below.
-#define CHECK_OP(val1, val2, op) LOG_IF_FALSE(FATAL, ((val1) op (val2))) \
-  << "Check failed: " #val1 " " #op " " #val2 " "
+#define CHECK_OP(val1, val2, op) LOG_IF_FALSE(FATAL, ((val1)op(val2))) << "Check failed: " #val1 " " #op " " #val2 " "
 
 // Check_op macro definitions
 #define CHECK_EQ(val1, val2) CHECK_OP(val1, val2, ==)
@@ -435,92 +459,103 @@ void LogMessageFatal(const char *file, int line, const T &message) {
 // qiao.helloworld@gmail.com /tzu.ta.lin@gmail.com add
 // Add logging macros which are missing in glog or are not accessible for
 // whatever reason.
-#define CHECK_NEAR(val1, val2, margin)           \
-  do {                                           \
-    CHECK_LE((val1), (val2)+(margin));           \
-    CHECK_GE((val1), (val2)-(margin));           \
-  } while (0)
+#define CHECK_NEAR(val1, val2, margin)                                                                                 \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        CHECK_LE((val1), (val2) + (margin));                                                                           \
+        CHECK_GE((val1), (val2) - (margin));                                                                           \
+    } while (0)
 
 #ifndef NDEBUG
 // Debug only versions of CHECK_OP macros.
-#  define DCHECK_EQ(val1, val2) CHECK_OP(val1, val2, ==)
-#  define DCHECK_NE(val1, val2) CHECK_OP(val1, val2, !=)
-#  define DCHECK_LE(val1, val2) CHECK_OP(val1, val2, <=)
-#  define DCHECK_LT(val1, val2) CHECK_OP(val1, val2, <)
-#  define DCHECK_GE(val1, val2) CHECK_OP(val1, val2, >=)
-#  define DCHECK_GT(val1, val2) CHECK_OP(val1, val2, >)
+#define DCHECK_EQ(val1, val2) CHECK_OP(val1, val2, ==)
+#define DCHECK_NE(val1, val2) CHECK_OP(val1, val2, !=)
+#define DCHECK_LE(val1, val2) CHECK_OP(val1, val2, <=)
+#define DCHECK_LT(val1, val2) CHECK_OP(val1, val2, <)
+#define DCHECK_GE(val1, val2) CHECK_OP(val1, val2, >=)
+#define DCHECK_GT(val1, val2) CHECK_OP(val1, val2, >)
 // qiao.helloworld@gmail.com /tzu.ta.lin@gmail.com add
-#  define DCHECK_NEAR(val1, val2, margin) CHECK_NEAR(val1, val2, margin)
+#define DCHECK_NEAR(val1, val2, margin) CHECK_NEAR(val1, val2, margin)
 #else
 // These versions generate no code in optimized mode.
-#  define DCHECK_EQ(val1, val2) if (false) CHECK_OP(val1, val2, ==)
-#  define DCHECK_NE(val1, val2) if (false) CHECK_OP(val1, val2, !=)
-#  define DCHECK_LE(val1, val2) if (false) CHECK_OP(val1, val2, <=)
-#  define DCHECK_LT(val1, val2) if (false) CHECK_OP(val1, val2, <)
-#  define DCHECK_GE(val1, val2) if (false) CHECK_OP(val1, val2, >=)
-#  define DCHECK_GT(val1, val2) if (false) CHECK_OP(val1, val2, >)
+#define DCHECK_EQ(val1, val2)                                                                                          \
+    if (false)                                                                                                         \
+    CHECK_OP(val1, val2, ==)
+#define DCHECK_NE(val1, val2)                                                                                          \
+    if (false)                                                                                                         \
+    CHECK_OP(val1, val2, !=)
+#define DCHECK_LE(val1, val2)                                                                                          \
+    if (false)                                                                                                         \
+    CHECK_OP(val1, val2, <=)
+#define DCHECK_LT(val1, val2)                                                                                          \
+    if (false)                                                                                                         \
+    CHECK_OP(val1, val2, <)
+#define DCHECK_GE(val1, val2)                                                                                          \
+    if (false)                                                                                                         \
+    CHECK_OP(val1, val2, >=)
+#define DCHECK_GT(val1, val2)                                                                                          \
+    if (false)                                                                                                         \
+    CHECK_OP(val1, val2, >)
 // qiao.helloworld@gmail.com /tzu.ta.lin@gmail.com add
-#  define DCHECK_NEAR(val1, val2, margin) if (false) CHECK_NEAR(val1, val2, margin)
-#endif  // NDEBUG
+#define DCHECK_NEAR(val1, val2, margin)                                                                                \
+    if (false)                                                                                                         \
+    CHECK_NEAR(val1, val2, margin)
+#endif // NDEBUG
 
 // ---------------------------CHECK_NOTNULL macros ---------------------------
 
 // Helpers for CHECK_NOTNULL(). Two are necessary to support both raw pointers
 // and smart pointers.
-template <typename T>
-T& CheckNotNullCommon(const char *file, int line, const char *names, T& t) {
-  if (t == NULL) {
-    LogMessageFatal(file, line, std::string(names));
-  }
-  return t;
+template <typename T> T &CheckNotNullCommon(const char *file, int line, const char *names, T &t)
+{
+    if (t == NULL)
+    {
+        LogMessageFatal(file, line, std::string(names));
+    }
+    return t;
 }
 
-template <typename T>
-T* CheckNotNull(const char *file, int line, const char *names, T* t) {
-  return CheckNotNullCommon(file, line, names, t);
+template <typename T> T *CheckNotNull(const char *file, int line, const char *names, T *t)
+{
+    return CheckNotNullCommon(file, line, names, t);
 }
 
-template <typename T>
-T& CheckNotNull(const char *file, int line, const char *names, T& t) {
-  return CheckNotNullCommon(file, line, names, t);
+template <typename T> T &CheckNotNull(const char *file, int line, const char *names, T &t)
+{
+    return CheckNotNullCommon(file, line, names, t);
 }
 
 // Check that a pointer is not null.
-#define CHECK_NOTNULL(val) \
-  CheckNotNull(__FILE__, __LINE__, "'" #val "' Must be non NULL", (val))
+#define CHECK_NOTNULL(val) CheckNotNull(__FILE__, __LINE__, "'" #val "' Must be non NULL", (val))
 
 #ifndef NDEBUG
 // Debug only version of CHECK_NOTNULL
-#define DCHECK_NOTNULL(val) \
-  CheckNotNull(__FILE__, __LINE__, "'" #val "' Must be non NULL", (val))
+#define DCHECK_NOTNULL(val) CheckNotNull(__FILE__, __LINE__, "'" #val "' Must be non NULL", (val))
 #else
 // Optimized version - generates no code.
-#define DCHECK_NOTNULL(val) if (false)\
-  CheckNotNull(__FILE__, __LINE__, "'" #val "' Must be non NULL", (val))
-#endif  // NDEBUG
+#define DCHECK_NOTNULL(val)                                                                                            \
+    if (false)                                                                                                         \
+    CheckNotNull(__FILE__, __LINE__, "'" #val "' Must be non NULL", (val))
+#endif // NDEBUG
 
 // Modified from ceres miniglog version [begin] -------------------------------
-//#include "ceres/internal/reenable_warnings.h"
+// #include "ceres/internal/reenable_warnings.h"
 // Modified from ceres miniglog version [end] ---------------------------------
-
 
 // ---------------------------TRACE macros ---------------------------
 // qiao.helloworld@gmail.com /tzu.ta.lin@gmail.com add
-#define __FILENAME__ \
-  (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#define DEXEC(fn)                                                      \
-  do {                                                                 \
-    DLOG(INFO) << "[EXEC " << #fn << " START]";                        \
-    std::chrono::steady_clock::time_point begin =                      \
-      std::chrono::steady_clock::now();                                \
-    fn;                                                                \
-    std::chrono::steady_clock::time_point end =                        \
-      std::chrono::steady_clock::now();                                \
-    DLOG(INFO) << "[EXEC " << #fn << " FINISHED in "                   \
-             << std::chrono::duration_cast<std::chrono::microseconds>  \
-               (end - begin).count() << " ms]";                        \
-  } while (0);
+#define DEXEC(fn)                                                                                                      \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        DLOG(INFO) << "[EXEC " << #fn << " START]";                                                                    \
+        std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();                                \
+        fn;                                                                                                            \
+        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();                                  \
+        DLOG(INFO) << "[EXEC " << #fn << " FINISHED in "                                                               \
+                   << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " ms]";            \
+    } while (0);
 // DEXEC(fn)
 //
 // Usage:
@@ -529,7 +564,7 @@ T& CheckNotNull(const char *file, int line, const char *names, T& t) {
 // foo.cpp: 123 [EXEC foo() START]
 // foo.cpp: 123 [EXEC foo() FINISHED in 456 ms]
 
-#define DTRACE  DLOG(INFO) << "of [" << __func__ << "]";
+#define DTRACE DLOG(INFO) << "of [" << __func__ << "]";
 // Usage:
 // void foo() {
 //   DTRACE
@@ -537,4 +572,4 @@ T& CheckNotNull(const char *file, int line, const char *names, T& t) {
 // -- output --
 // foo.cpp: 123 of [void foo(void)]
 
-#endif  // CERCES_INTERNAL_MINIGLOG_GLOG_LOGGING_H_
+#endif // CERCES_INTERNAL_MINIGLOG_GLOG_LOGGING_H_

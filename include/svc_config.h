@@ -7,15 +7,25 @@
 
 #define SVC_INSTALL_PATH "/usr/local/bin/svc"
 
-namespace indem {
+namespace indem
+{
 
-class SVCConfig final {
-  SVCConfig() {}
-  ~SVCConfig() {}
-public:
-  static std::string GetInstallPath() { return SVC_INSTALL_PATH; }
+class SVCConfig final
+{
+    SVCConfig()
+    {
+    }
+    ~SVCConfig()
+    {
+    }
+
+  public:
+    static std::string GetInstallPath()
+    {
+        return SVC_INSTALL_PATH;
+    }
 };
 
-}
+} // namespace indem
 
 #endif /* __SVC_CONFIG_H__ */

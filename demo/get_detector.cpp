@@ -20,69 +20,70 @@
 #include <mutex>
 using namespace indem;
 
-template <typename T> void clear(std::queue<T> &q) {
-  std::queue<T> empty;
-  swap(empty, q);
+template <typename T> void clear(std::queue<T> &q)
+{
+    std::queue<T> empty;
+    swap(empty, q);
 }
 
-int main(int argc, char **argv) {
-  auto m_pSDK = new CIMRSDK();
-  MRCONFIG config = {0};
-  config.bSlam = false;
-  config.imgResolution = IMG_640;
-  config.imgFrequency = 50;
-  config.imuFrequency = 1000;
+int main(int argc, char **argv)
+{
+    auto m_pSDK = new CIMRSDK();
+    MRCONFIG config = {0};
+    config.bSlam = false;
+    config.imgResolution = IMG_640;
+    config.imgFrequency = 50;
+    config.imuFrequency = 1000;
 
-  m_pSDK->Init(config);
-  std::queue<cv::Mat> detector_queue;
-  std::mutex mutex_detector;
-  int detector_count = 0;
-  std::string name[10] = {
-      "BG",    "PERSON", "PET_CAT",   "PET_DOG", "SOFA",
-      "TABLE", "BED",    "EXCREMENT", "WIRE",    "KEY",
-  };
-  m_pSDK->EnableDetectorProcessor();
-  m_pSDK->RegistDetectorCallback(
-      [&detector_count, &detector_queue, &name, &mutex_detector](DetectorInfo info) {
-        if (!info.img.empty()) {
+    m_pSDK->Init(config);
+    std::queue<cv::Mat> detector_queue;
+    std::mutex mutex_detector;
+    int detector_count = 0;
+    std::string name[10] = {
+        "BG", "PERSON", "PET_CAT", "PET_DOG", "SOFA", "TABLE", "BED", "EXCREMENT", "WIRE", "KEY",
+    };
+    m_pSDK->EnableDetectorProcessor();
+    m_pSDK->RegistDetectorCallback([&detector_count, &detector_queue, &name, &mutex_detector](DetectorInfo info) {
+        if (!info.img.empty())
+        {
             {
                 std::unique_lock<std::mutex> lock(mutex_detector);
                 detector_queue.push(info.img);
             }
-          ++detector_count;
-          for (int i = 0; i < info.finalBoxInfo.size(); ++i) {
-            BoxInfo &obj = info.finalBoxInfo[i];
+            ++detector_count;
+            for (int i = 0; i < info.finalBoxInfo.size(); ++i)
+            {
+                BoxInfo &obj = info.finalBoxInfo[i];
 #ifdef __linux
-            LOG(INFO) << "finalBoxInfo[" << i << "]: "
-                      << "name: " << name[obj.class_name]
-                      << ", score:" << obj.score;
+                LOG(INFO) << "finalBoxInfo[" << i << "]: "
+                          << "name: " << name[obj.class_name] << ", score:" << obj.score;
 #endif
-          }
+            }
         }
-      });
-  auto &&time_beg = times::now();
-  while (true) {
-    if (!detector_queue.empty()) {
-      std::unique_lock<std::mutex> lock(mutex_detector);
-      cv::imshow("detector", detector_queue.front());
-      clear(detector_queue);
+    });
+    auto &&time_beg = times::now();
+    while (true)
+    {
+        if (!detector_queue.empty())
+        {
+            std::unique_lock<std::mutex> lock(mutex_detector);
+            cv::imshow("detector", detector_queue.front());
+            clear(detector_queue);
+        }
+        char key = static_cast<char>(cv::waitKey(1));
+        if (key == 27 || key == 'q' || key == 'Q')
+        { // ESC/Q
+            break;
+        }
     }
-    char key = static_cast<char>(cv::waitKey(1));
-    if (key == 27 || key == 'q' || key == 'Q') { // ESC/Q
-      break;
-    }
-  }
-  delete m_pSDK;
-  auto &&time_end = times::now();
+    delete m_pSDK;
+    auto &&time_end = times::now();
 
-  float elapsed_ms =
-      times::count<times::microseconds>(time_end - time_beg) * 0.001f;
+    float elapsed_ms = times::count<times::microseconds>(time_end - time_beg) * 0.001f;
 #ifdef __linux
-  LOG(INFO) << "Time beg: " << times::to_local_string(time_beg)
-            << ", end: " << times::to_local_string(time_end)
-            << ", cost: " << elapsed_ms << "ms";
-  LOG(INFO) << "depth count: " << detector_count
-            << ", fps: " << (1000.f * detector_count / elapsed_ms);
+    LOG(INFO) << "Time beg: " << times::to_local_string(time_beg) << ", end: " << times::to_local_string(time_end)
+              << ", cost: " << elapsed_ms << "ms";
+    LOG(INFO) << "depth count: " << detector_count << ", fps: " << (1000.f * detector_count / elapsed_ms);
 #endif
-  return 0;
+    return 0;
 }
