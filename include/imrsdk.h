@@ -354,13 +354,13 @@ class INDEM_DLL_EXPORT CIMRSDK
      * \~chinese @return   状态码,成功为0
      * \~english \brief some plugin may have outputs. Here give a way to get
      * plugin output data.
-     * \~english \param pluginName	which plugin should be add.
+     * \~english \param pluginNamewhich plugin should be add.
      * \~english \param callbackName which callback function should be add or
      * replace.
-     * \~english \param cb			pointer of callback function.
-     * \~english \param param		which will be passed to callback
+     * \~english \param cbpointer of callback function.
+     * \~english \param paramwhich will be passed to callback
      * function.
-     * \~english \return				true if success
+     * \~english \returntrue if success
      */
     int AddPluginCallback(const char *pluginName, const char *callbackName, PluginCallback cb, void *param);
 
@@ -373,11 +373,11 @@ class INDEM_DLL_EXPORT CIMRSDK
      * \~chinese @return   状态码,成功为0;其他应该定义为该函数的返回值
      * \~english \brief some plugin may have its own method. Here give a way to
      * invoke these method.
-     * \~english \param pluginName	which plugin should be added.
-     * \~english \param methodName	which method should be called.
-     * \~english \param inParam		pointer passed in.
-     * \~english \param outParam		pointer to retrieved.
-     * \~english \return				false if fail
+     * \~english \param pluginNamewhich plugin should be added.
+     * \~english \param methodNamewhich method should be called.
+     * \~english \param inParampointer passed in.
+     * \~english \param outParampointer to retrieved.
+     * \~english \returnfalse if fail
      */
     int InvokePluginMethod(const char *pluginName, const char *methodName, void *inParam, void *outParam);
 

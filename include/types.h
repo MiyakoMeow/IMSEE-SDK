@@ -413,7 +413,7 @@ struct SlamParameter
     int _ceres_maxIterations;
     /** 最大优化次数(默认为４) */
     double _ceres_timeLimit;
-    /** ceres　time　limit(默认为3.5000000000000003e-02) */
+    /** cerestimelimit(默认为3.5000000000000003e-02) */
     int detection_threshold;
     /** 角点阈值(默认为30) */
     int detection_octaves;
