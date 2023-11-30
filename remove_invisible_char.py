@@ -32,7 +32,7 @@ for file_path in file_paths:
     # Read
     code = ""
     with open(file_path, "rb") as f:
-        code = f.read().decode("utf-8")
+        code = f.read().decode("utf-8", "replace")
     # Clean
     clean_code = remove_invisible_chars(code)
     # Write
