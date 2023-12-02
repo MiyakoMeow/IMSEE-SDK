@@ -18,7 +18,7 @@ vcpkg install pcl[tools,visualization]:x64-windows
 > 我把lib目录里的默认dll改成了对应OpenCV3.4.3的版本<br>
 > 还是第一次见把代码和某个OpenCV版本锁死的，绝活<br>
 
-下载OpenCV3.4.3（必须得是这个版本）<br>
+下载OpenCV3.4.3（必须得是这个版本）[官方下载](https://sourceforge.net/projects/opencvlibrary/files/opencv-win/3.4.3/opencv-3.4.3-vc14_vc15.exe/download)<br>
 文件名：opencv-3.4.3-vc14_vc15.exe<br>
 打开，解压，把它放到想要的位置<br>
 将OpenCV_DIR环境变量设为`D:\Libraries\OpenCV343\build\x64\vc15\lib`<br>
