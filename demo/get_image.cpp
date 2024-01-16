@@ -18,8 +18,8 @@
 #include "times.h"
 #include "types.h"
 #include <iostream>
-#include <queue>
 #include <mutex>
+#include <queue>
 
 #define FONT_FACE cv::FONT_HERSHEY_PLAIN
 #define FONT_SCALE 1

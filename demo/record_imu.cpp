@@ -19,7 +19,6 @@
 #include <mutex>
 #include <queue>
 #include <thread>
-#include <mutex>
 #ifdef WIN32
 #include <Windows.h>
 #define PATH_MAX 4096
