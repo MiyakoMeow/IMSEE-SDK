@@ -16,11 +16,11 @@
 #include "logging.h"
 #include "times.h"
 #include "types.h"
+#include <mutex>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 #include <queue>
-#include <mutex>
 using namespace indem;
 
 template <typename T> void clear(std::queue<T> &q)

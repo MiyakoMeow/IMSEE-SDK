@@ -15,11 +15,11 @@
 #include "imrsdk.h"
 #include "logging.h"
 #include "types.h"
+#include <mutex>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 #include <queue>
-#include <mutex>
 using namespace indem;
 
 static cv::Mat cv_in_left, cv_in_left_inv;

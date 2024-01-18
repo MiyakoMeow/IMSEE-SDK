@@ -17,8 +17,8 @@
 #include "times.h"
 #include "types.h"
 #include "util_pcl.h"
-#include <queue>
 #include <mutex>
+#include <queue>
 using namespace indem;
 
 template <typename T> void clear(std::queue<T> &q)
